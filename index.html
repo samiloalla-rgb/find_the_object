@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>🏴‍☠️ Найди предметы — Пиратские сокровища</title>
+<title>🏴‍☠️ Find the Objects - Pirate Treasure</title>
 <style>
   * {
     margin: 0;
@@ -13,62 +13,63 @@
     user-select: none;
   }
 
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow-x: hidden;
     color: #fff;
+    padding: 5px;
   }
 
-  /* ===== HEADER ===== */
   .header {
     width: 100%;
     max-width: 500px;
-    padding: 10px 15px;
+    padding: 5px 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: rgba(0,0,0,0.4);
     backdrop-filter: blur(10px);
-    position: sticky;
-    top: 0;
-    z-index: 100;
     border-bottom: 2px solid rgba(255,215,0,0.3);
+    flex-shrink: 0;
   }
 
   .header h1 {
-    font-size: 16px;
+    font-size: 14px;
     color: #ffd700;
     text-shadow: 0 0 10px rgba(255,215,0,0.5);
   }
 
   .header-controls {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
   }
 
   .score-display {
-    font-size: 14px;
+    font-size: 12px;
     color: #fff;
     background: rgba(255,215,0,0.2);
-    padding: 4px 10px;
+    padding: 3px 8px;
     border-radius: 20px;
     border: 1px solid rgba(255,215,0,0.4);
   }
 
   .music-btn {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     border: 2px solid #ffd700;
     background: rgba(255,215,0,0.15);
     color: #ffd700;
-    font-size: 18px;
+    font-size: 16px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -87,33 +88,84 @@
     background: rgba(100,100,100,0.15);
   }
 
-  /* ===== SCENE AREA ===== */
+  .progress-bar {
+    width: 100%;
+    max-width: 500px;
+    padding: 0 10px;
+    margin: 3px 0;
+    flex-shrink: 0;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffd700, #ff8c00);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
   .scene-container {
     width: 100%;
     max-width: 500px;
-    padding: 10px;
-    position: relative;
+    padding: 5px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .scene-wrapper {
     position: relative;
     width: 100%;
-    border-radius: 16px;
+    max-height: 100%;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(255,215,0,0.1);
-    border: 3px solid rgba(255,215,0,0.3);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 10px rgba(255,215,0,0.1);
+    border: 2px solid rgba(255,215,0,0.3);
+    background: #2a1a0a;
   }
 
   .scene-image {
     width: 100%;
     height: auto;
+    max-height: 50vh;
     display: block;
     aspect-ratio: 3/4;
     object-fit: cover;
-    background: #2a1a0a;
   }
 
-  /* Hotspots */
+  .scene-image.error {
+    opacity: 0.3;
+  }
+
+  .error-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(200,0,0,0.9);
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 12px;
+    text-align: center;
+    display: none;
+    z-index: 10;
+  }
+
+  .error-label.show {
+    display: block;
+  }
+
   .hotspot {
     position: absolute;
     border-radius: 50%;
@@ -140,7 +192,6 @@
     border: 2px solid rgba(0,200,0,0.5);
   }
 
-  /* ===== CHECKMARK ANIMATION ===== */
   .checkmark-overlay {
     position: fixed;
     top: 50%;
@@ -156,8 +207,8 @@
   }
 
   .checkmark-svg {
-    width: 120px;
-    height: 120px;
+    width: 100px;
+    height: 100px;
   }
 
   .checkmark-circle {
@@ -191,7 +242,6 @@
     to { stroke-dashoffset: 0; }
   }
 
-  /* ===== WRONG ANSWER SHAKE ===== */
   .shake {
     animation: shakeAnim 0.4s ease-in-out;
   }
@@ -204,32 +254,32 @@
     80% { transform: translateX(5px); }
   }
 
-  /* ===== ITEMS GRID ===== */
   .items-section {
     width: 100%;
     max-width: 500px;
-    padding: 10px 15px 30px;
+    padding: 5px;
+    flex-shrink: 0;
   }
 
   .items-title {
     text-align: center;
-    font-size: 14px;
+    font-size: 11px;
     color: rgba(255,255,255,0.7);
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
   }
 
   .items-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
+    gap: 5px;
   }
 
   .item-card {
     position: relative;
     aspect-ratio: 1/1;
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
     background: rgba(255,255,255,0.08);
     border: 2px solid rgba(255,255,255,0.15);
@@ -238,7 +288,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px;
+    padding: 3px;
   }
 
   .item-card:hover {
@@ -259,7 +309,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 32px;
+    font-size: 24px;
     color: #4CAF50;
     font-weight: bold;
     text-shadow: 0 0 10px rgba(76,175,80,0.8);
@@ -267,10 +317,14 @@
   }
 
   .item-card img {
-    width: 80%;
-    height: 80%;
+    width: 85%;
+    height: 85%;
     object-fit: contain;
     transition: opacity 0.5s;
+  }
+
+  .item-card img.error {
+    opacity: 0.15;
   }
 
   .item-card.found img {
@@ -279,16 +333,15 @@
 
   .item-name {
     position: absolute;
-    bottom: 2px;
+    bottom: 1px;
     left: 0;
     right: 0;
     text-align: center;
-    font-size: 9px;
+    font-size: 7px;
     color: rgba(255,255,255,0.6);
-    line-height: 1.2;
+    line-height: 1.1;
   }
 
-  /* ===== WIN MODAL ===== */
   .win-modal {
     position: fixed;
     inset: 0;
@@ -309,33 +362,33 @@
     background: linear-gradient(135deg, #1a1a2e, #16213e);
     border: 3px solid #ffd700;
     border-radius: 24px;
-    padding: 30px;
+    padding: 25px;
     text-align: center;
-    max-width: 320px;
+    max-width: 300px;
     width: 90%;
     box-shadow: 0 0 40px rgba(255,215,0,0.3);
   }
 
   .win-content h2 {
-    font-size: 28px;
+    font-size: 24px;
     color: #ffd700;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
 
   .win-content p {
-    font-size: 16px;
+    font-size: 14px;
     color: rgba(255,255,255,0.8);
-    margin-bottom: 20px;
-  }
-
-  .win-content .emoji {
-    font-size: 60px;
     margin-bottom: 15px;
   }
 
+  .win-content .emoji {
+    font-size: 50px;
+    margin-bottom: 10px;
+  }
+
   .restart-btn {
-    padding: 12px 30px;
-    font-size: 16px;
+    padding: 10px 25px;
+    font-size: 14px;
     border: none;
     border-radius: 30px;
     background: linear-gradient(135deg, #ffd700, #ff8c00);
@@ -355,34 +408,9 @@
     to { opacity: 1; }
   }
 
-  /* ===== PROGRESS BAR ===== */
-  .progress-bar {
-    width: 100%;
-    max-width: 500px;
-    padding: 0 15px;
-    margin-top: 5px;
-  }
-
-  .progress-track {
-    width: 100%;
-    height: 6px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 3px;
-    overflow: hidden;
-  }
-
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #ffd700, #ff8c00);
-    border-radius: 3px;
-    transition: width 0.5s ease;
-    width: 0%;
-  }
-
-  /* ===== HINT PULSE ===== */
   @keyframes pulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(255,215,0,0.4); }
-    50% { box-shadow: 0 0 0 8px rgba(255,215,0,0); }
+    50% { box-shadow: 0 0 0 6px rgba(255,215,0,0); }
   }
 
   .item-card:not(.found) {
@@ -396,38 +424,34 @@
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="header">
-  <h1>🏴‍☠️ Найди предметы</h1>
+  <h1>🏴‍☠️ Find Objects</h1>
   <div class="header-controls">
     <div class="score-display">
       <span id="foundCount">0</span> / 15
     </div>
-    <button class="music-btn" id="musicBtn" title="Музыка вкл/выкл">🔊</button>
+    <button class="music-btn" id="musicBtn" title="Toggle Music">🔊</button>
   </div>
 </div>
 
-<!-- PROGRESS BAR -->
 <div class="progress-bar">
   <div class="progress-track">
     <div class="progress-fill" id="progressFill"></div>
   </div>
 </div>
 
-<!-- SCENE -->
 <div class="scene-container">
   <div class="scene-wrapper" id="sceneWrapper">
     <img
       class="scene-image"
       src="pirate_scene.jpg"
-      alt="Пиратская сцена — найди предметы"
+      alt="Pirate scene"
       id="sceneImage"
     >
-    <!-- Hotspots will be injected by JS -->
+    <div class="error-label" id="sceneError">⚠️ pirate_scene.jpg not found</div>
   </div>
 </div>
 
-<!-- CHECKMARK OVERLAY -->
 <div class="checkmark-overlay" id="checkmarkOverlay">
   <svg class="checkmark-svg" viewBox="0 0 100 100">
     <circle class="checkmark-circle" cx="50" cy="50" r="45"/>
@@ -435,25 +459,20 @@
   </svg>
 </div>
 
-<!-- ITEMS GRID -->
 <div class="items-section">
-  <div class="items-title">Найди все предметы на картинке</div>
-  <div class="items-grid" id="itemsGrid">
-    <!-- Items injected by JS -->
-  </div>
+  <div class="items-title">Find all items in the picture</div>
+  <div class="items-grid" id="itemsGrid"></div>
 </div>
 
-<!-- WIN MODAL -->
 <div class="win-modal" id="winModal">
   <div class="win-content">
     <div class="emoji">🎉🏴‍☠️🎉</div>
-    <h2>Победа!</h2>
-    <p>Ты нашёл все 15 пиратских сокровищ!</p>
-    <button class="restart-btn" id="restartBtn">Играть снова</button>
+    <h2>You Win!</h2>
+    <p>You found all 15 pirate treasures!</p>
+    <button class="restart-btn" id="restartBtn">Play Again</button>
   </div>
 </div>
 
-<!-- AUDIO -->
 <audio id="bgMusic" loop preload="auto">
   <source src="pirate_music.mp3" type="audio/mpeg">
 </audio>
@@ -462,30 +481,31 @@
 (function() {
   'use strict';
 
-  // ===== DATA =====
   const ITEMS = [
-    { id: 'pirate_hat',      name: 'Шляпа',       file: 'pirate_hat.jpg',       hx: 42, hy: 12, hr: 12 },
-    { id: 'treasure_chest',  name: 'Сундук',      file: 'treasure_chest.jpg',   hx: 45, hy: 62, hr: 14 },
-    { id: 'sword',           name: 'Сабля',       file: 'sword.jpg',            hx: 15, hy: 55, hr: 10 },
-    { id: 'treasure_map',    name: 'Карта',       file: 'treasure_map.jpg',     hx: 48, hy: 88, hr: 10 },
-    { id: 'gold_coin',       name: 'Монета',      file: 'gold_coin.jpg',        hx: 30, hy: 92, hr: 6  },
-    { id: 'eye_patch',       name: 'Повязка',     file: 'eye_patch.jpg',        hx: 55, hy: 30, hr: 8  },
-    { id: 'telescope',       name: 'Труба',       file: 'telescope.jpg',        hx: 72, hy: 28, hr: 9  },
-    { id: 'bandana',         name: 'Бандана',     file: 'bandana.jpg',          hx: 22, hy: 82, hr: 11 },
-    { id: 'anchor',          name: 'Якорь',       file: 'anchor.jpg',           hx: 78, hy: 72, hr: 11 },
-    { id: 'parrot',          name: 'Попугай',     file: 'parrot.jpg',           hx: 18, hy: 28, hr: 10 },
-    { id: 'message_bottle',  name: 'Бутылка',     file: 'message_bottle.jpg',   hx: 72, hy: 42, hr: 8  },
-    { id: 'ship_wheel',      name: 'Штурвал',     file: 'ship_wheel.jpg',       hx: 82, hy: 52, hr: 12 },
-    { id: 'barrel',          name: 'Бочка',       file: 'barrel.jpg',           hx: 18, hy: 48, hr: 11 },
-    { id: 'seashell',        name: 'Ракушка',     file: 'seashell.jpg',         hx: 88, hy: 92, hr: 7  },
-    { id: 'crab',            name: 'Краб',        file: 'crab.jpg',             hx: 75, hy: 88, hr: 9  }
+    { id: 'pirate_hat',      name: 'Hat',         file: 'pirate_hat.jpg',       hx: 42, hy: 12, hr: 12 },
+    { id: 'treasure_chest',  name: 'Chest',       file: 'treasure_chest.jpg',   hx: 45, hy: 62, hr: 14 },
+    { id: 'sword',           name: 'Sword',       file: 'sword.jpg',            hx: 15, hy: 55, hr: 10 },
+    { id: 'treasure_map',    name: 'Map',         file: 'treasure_map.jpg',     hx: 48, hy: 88, hr: 10 },
+    { id: 'gold_coin',       name: 'Coin',        file: 'gold_coin.jpg',        hx: 30, hy: 92, hr: 6  },
+    { id: 'eye_patch',       name: 'Patch',       file: 'eye_patch.jpg',        hx: 55, hy: 30, hr: 8  },
+    { id: 'telescope',       name: 'Scope',       file: 'telescope.jpg',        hx: 72, hy: 28, hr: 9  },
+    { id: 'bandana',         name: 'Bandana',     file: 'bandana.jpg',          hx: 22, hy: 82, hr: 11 },
+    { id: 'anchor',          name: 'Anchor',      file: 'anchor.jpg',           hx: 78, hy: 72, hr: 11 },
+    { id: 'parrot',          name: 'Parrot',      file: 'parrot.jpg',           hx: 18, hy: 28, hr: 10 },
+    { id: 'message_bottle',  name: 'Bottle',      file: 'message_bottle.jpg',   hx: 72, hy: 42, hr: 8  },
+    { id: 'ship_wheel',      name: 'Wheel',       file: 'ship_wheel.jpg',       hx: 82, hy: 52, hr: 12 },
+    { id: 'barrel',          name: 'Barrel',      file: 'barrel.jpg',           hx: 18, hy: 48, hr: 11 },
+    { id: 'seashell',        name: 'Shell',       file: 'seashell.jpg',         hx: 88, hy: 92, hr: 7  },
+    { id: 'crab',            name: 'Crab',        file: 'crab.jpg',             hx: 75, hy: 88, hr: 9  }
   ];
 
   const TOTAL = ITEMS.length;
   let foundSet = new Set();
   let musicPlaying = false;
 
-  // ===== DOM =====
+  // Cache buster - обход кэша браузера
+  const v = '?v=' + Date.now();
+
   const sceneWrapper  = document.getElementById('sceneWrapper');
   const itemsGrid     = document.getElementById('itemsGrid');
   const foundCountEl  = document.getElementById('foundCount');
@@ -495,25 +515,56 @@
   const restartBtn    = document.getElementById('restartBtn');
   const musicBtn      = document.getElementById('musicBtn');
   const bgMusic       = document.getElementById('bgMusic');
+  const sceneImage    = document.getElementById('sceneImage');
+  const sceneError    = document.getElementById('sceneError');
 
-  // ===== BUILD ITEMS GRID =====
+  // Проверка главного изображения
+  sceneImage.addEventListener('error', () => {
+    console.error('❌ FAILED: pirate_scene.jpg');
+    sceneImage.classList.add('error');
+    sceneError.classList.add('show');
+  });
+
+  sceneImage.addEventListener('load', () => {
+    console.log('✅ OK: pirate_scene.jpg');
+  });
+
+  // Добавляем cache buster к пути
+  sceneImage.src = 'pirate_scene.jpg' + v;
+
   function buildItemsGrid() {
     itemsGrid.innerHTML = '';
     ITEMS.forEach(item => {
       const card = document.createElement('div');
       card.className = 'item-card';
       card.dataset.id = item.id;
-      card.innerHTML = `
-        <img src="${item.file}" alt="${item.name}" loading="lazy">
-        <div class="item-name">${item.name}</div>
-      `;
+
+      const img = document.createElement('img');
+      // ВАЖНО: cache buster + путь к файлу
+      img.src = item.file + v;
+      img.alt = item.name;
+      // Убрали loading="lazy" - он мешает при file:// протоколе
+
+      img.addEventListener('error', () => {
+        console.error('❌ FAILED: ' + item.file);
+        img.classList.add('error');
+      });
+
+      img.addEventListener('load', () => {
+        console.log('✅ OK: ' + item.file);
+      });
+
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'item-name';
+      nameDiv.textContent = item.name;
+
+      card.appendChild(img);
+      card.appendChild(nameDiv);
       itemsGrid.appendChild(card);
     });
   }
 
-  // ===== BUILD HOTSPOTS =====
   function buildHotspots() {
-    // Remove old hotspots
     sceneWrapper.querySelectorAll('.hotspot').forEach(h => h.remove());
 
     ITEMS.forEach(item => {
@@ -530,25 +581,20 @@
     });
   }
 
-  // ===== HANDLE CLICK =====
   function handleHotspotClick(id, hotspotEl) {
     if (foundSet.has(id)) return;
 
     foundSet.add(id);
     hotspotEl.classList.add('found');
 
-    // Mark card
     const card = itemsGrid.querySelector(`.item-card[data-id="${id}"]`);
     if (card) card.classList.add('found');
 
-    // Update score
     foundCountEl.textContent = foundSet.size;
     progressFill.style.width = `${(foundSet.size / TOTAL) * 100}%`;
 
-    // Show checkmark
     showCheckmark();
 
-    // Check win
     if (foundSet.size === TOTAL) {
       setTimeout(() => {
         winModal.classList.add('show');
@@ -556,10 +602,8 @@
     }
   }
 
-  // ===== CHECKMARK ANIMATION =====
   function showCheckmark() {
     checkmarkEl.classList.remove('show');
-    // Force reflow
     void checkmarkEl.offsetWidth;
     checkmarkEl.classList.add('show');
 
@@ -568,15 +612,12 @@
     }, 900);
   }
 
-  // ===== WRONG CLICK ON SCENE =====
   sceneWrapper.addEventListener('click', (e) => {
     if (e.target.classList.contains('hotspot')) return;
-    // Clicked outside any hotspot — shake
     sceneWrapper.classList.add('shake');
     setTimeout(() => sceneWrapper.classList.remove('shake'), 400);
   });
 
-  // ===== MUSIC TOGGLE =====
   musicBtn.addEventListener('click', () => {
     if (musicPlaying) {
       bgMusic.pause();
@@ -590,7 +631,6 @@
     musicPlaying = !musicPlaying;
   });
 
-  // ===== RESTART =====
   restartBtn.addEventListener('click', () => {
     foundSet.clear();
     foundCountEl.textContent = '0';
@@ -601,7 +641,8 @@
     sceneWrapper.querySelectorAll('.hotspot').forEach(h => h.classList.remove('found'));
   });
 
-  // ===== INIT =====
+  console.log('🏴‍☠️ Game starting...');
+  console.log('📁 Files should be in the same folder as index.html');
   buildItemsGrid();
   buildHotspots();
 
