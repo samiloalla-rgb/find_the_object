@@ -112,6 +112,7 @@
     width: 0%;
   }
 
+  /* ===== SCENE - ИСПРАВЛЕНО ===== */
   .scene-container {
     width: 100%;
     max-width: 500px;
@@ -126,21 +127,23 @@
   .scene-wrapper {
     position: relative;
     width: 100%;
-    max-height: 100%;
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 10px rgba(255,215,0,0.1);
     border: 2px solid rgba(255,215,0,0.3);
     background: #2a1a0a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .scene-image {
     width: 100%;
     height: auto;
-    max-height: 50vh;
+    max-height: 55vh;
     display: block;
-    aspect-ratio: 3/4;
-    object-fit: cover;
+    object-fit: contain;
+    background: #2a1a0a;
   }
 
   .scene-image.error {
@@ -273,13 +276,13 @@
   .items-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 5px;
+    gap: 4px;
   }
 
   .item-card {
     position: relative;
     aspect-ratio: 1/1;
-    border-radius: 8px;
+    border-radius: 6px;
     overflow: hidden;
     background: rgba(255,255,255,0.08);
     border: 2px solid rgba(255,255,255,0.15);
@@ -288,7 +291,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 3px;
+    padding: 2px;
   }
 
   .item-card:hover {
@@ -309,7 +312,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 24px;
+    font-size: 20px;
     color: #4CAF50;
     font-weight: bold;
     text-shadow: 0 0 10px rgba(76,175,80,0.8);
@@ -317,8 +320,8 @@
   }
 
   .item-card img {
-    width: 85%;
-    height: 85%;
+    width: 90%;
+    height: 90%;
     object-fit: contain;
     transition: opacity 0.5s;
   }
@@ -337,7 +340,7 @@
     left: 0;
     right: 0;
     text-align: center;
-    font-size: 7px;
+    font-size: 6px;
     color: rgba(255,255,255,0.6);
     line-height: 1.1;
   }
@@ -503,7 +506,6 @@
   let foundSet = new Set();
   let musicPlaying = false;
 
-  // Cache buster - обход кэша браузера
   const v = '?v=' + Date.now();
 
   const sceneWrapper  = document.getElementById('sceneWrapper');
@@ -518,7 +520,6 @@
   const sceneImage    = document.getElementById('sceneImage');
   const sceneError    = document.getElementById('sceneError');
 
-  // Проверка главного изображения
   sceneImage.addEventListener('error', () => {
     console.error('❌ FAILED: pirate_scene.jpg');
     sceneImage.classList.add('error');
@@ -529,7 +530,6 @@
     console.log('✅ OK: pirate_scene.jpg');
   });
 
-  // Добавляем cache buster к пути
   sceneImage.src = 'pirate_scene.jpg' + v;
 
   function buildItemsGrid() {
@@ -540,10 +540,8 @@
       card.dataset.id = item.id;
 
       const img = document.createElement('img');
-      // ВАЖНО: cache buster + путь к файлу
       img.src = item.file + v;
       img.alt = item.name;
-      // Убрали loading="lazy" - он мешает при file:// протоколе
 
       img.addEventListener('error', () => {
         console.error('❌ FAILED: ' + item.file);
@@ -642,7 +640,6 @@
   });
 
   console.log('🏴‍☠️ Game starting...');
-  console.log('📁 Files should be in the same folder as index.html');
   buildItemsGrid();
   buildHotspots();
 
