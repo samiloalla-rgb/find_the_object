@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🏴‍☠️ Найди предметы — Пиратские сокровища</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    color: #fff;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    width: 100%;
+    max-width: 500px;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 2px solid rgba(255,215,0,0.3);
+  }
+
+  .header h1 {
+    font-size: 16px;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255,215,0,0.5);
+  }
+
+  .header-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .score-display {
+    font-size: 14px;
+    color: #fff;
+    background: rgba(255,215,0,0.2);
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,215,0,0.4);
+  }
+
+  .music-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid #ffd700;
+    background: rgba(255,215,0,0.15);
+    color: #ffd700;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+
+  .music-btn:hover, .music-btn:active {
+    background: rgba(255,215,0,0.3);
+    transform: scale(1.1);
+  }
+
+  .music-btn.muted {
+    border-color: #666;
+    color: #666;
+    background: rgba(100,100,100,0.15);
+  }
+
+  /* ===== SCENE AREA ===== */
+  .scene-container {
+    width: 100%;
+    max-width: 500px;
+    padding: 10px;
+    position: relative;
+  }
+
+  .scene-wrapper {
+    position: relative;
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(255,215,0,0.1);
+    border: 3px solid rgba(255,215,0,0.3);
+  }
+
+  .scene-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    aspect-ratio: 3/4;
+    object-fit: cover;
+    background: #2a1a0a;
+  }
+
+  /* Hotspots */
+  .hotspot {
+    position: absolute;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+  }
+
+  .hotspot:hover {
+    border-color: rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.1);
+  }
+
+  .hotspot.found {
+    pointer-events: none;
+  }
+
+  .hotspot.found::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(0,200,0,0.2);
+    border: 2px solid rgba(0,200,0,0.5);
+  }
+
+  /* ===== CHECKMARK ANIMATION ===== */
+  .checkmark-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .checkmark-overlay.show {
+    animation: checkPop 0.8s ease-out forwards;
+  }
+
+  .checkmark-svg {
+    width: 120px;
+    height: 120px;
+  }
+
+  .checkmark-circle {
+    fill: #4CAF50;
+    stroke: #2E7D32;
+    stroke-width: 3;
+  }
+
+  .checkmark-check {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+  }
+
+  .checkmark-overlay.show .checkmark-check {
+    animation: drawCheck 0.5s 0.2s ease-out forwards;
+  }
+
+  @keyframes checkPop {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+    70% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+  }
+
+  @keyframes drawCheck {
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* ===== WRONG ANSWER SHAKE ===== */
+  .shake {
+    animation: shakeAnim 0.4s ease-in-out;
+  }
+
+  @keyframes shakeAnim {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+  }
+
+  /* ===== ITEMS GRID ===== */
+  .items-section {
+    width: 100%;
+    max-width: 500px;
+    padding: 10px 15px 30px;
+  }
+
+  .items-title {
+    text-align: center;
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .items-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+
+  .item-card {
+    position: relative;
+    aspect-ratio: 1/1;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.15);
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+  }
+
+  .item-card:hover {
+    border-color: rgba(255,215,0,0.5);
+    background: rgba(255,255,255,0.12);
+    transform: translateY(-2px);
+  }
+
+  .item-card.found {
+    opacity: 0.3;
+    border-color: #4CAF50;
+    pointer-events: none;
+  }
+
+  .item-card.found::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 32px;
+    color: #4CAF50;
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(76,175,80,0.8);
+    z-index: 2;
+  }
+
+  .item-card img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+    transition: opacity 0.5s;
+  }
+
+  .item-card.found img {
+    opacity: 0.3;
+  }
+
+  .item-name {
+    position: absolute;
+    bottom: 2px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 9px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.2;
+  }
+
+  /* ===== WIN MODAL ===== */
+  .win-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    backdrop-filter: blur(5px);
+  }
+
+  .win-modal.show {
+    display: flex;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .win-content {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 3px solid #ffd700;
+    border-radius: 24px;
+    padding: 30px;
+    text-align: center;
+    max-width: 320px;
+    width: 90%;
+    box-shadow: 0 0 40px rgba(255,215,0,0.3);
+  }
+
+  .win-content h2 {
+    font-size: 28px;
+    color: #ffd700;
+    margin-bottom: 10px;
+  }
+
+  .win-content p {
+    font-size: 16px;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 20px;
+  }
+
+  .win-content .emoji {
+    font-size: 60px;
+    margin-bottom: 15px;
+  }
+
+  .restart-btn {
+    padding: 12px 30px;
+    font-size: 16px;
+    border: none;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #1a1a2e;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .restart-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(255,215,0,0.4);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* ===== PROGRESS BAR ===== */
+  .progress-bar {
+    width: 100%;
+    max-width: 500px;
+    padding: 0 15px;
+    margin-top: 5px;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffd700, #ff8c00);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  /* ===== HINT PULSE ===== */
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,215,0,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(255,215,0,0); }
+  }
+
+  .item-card:not(.found) {
+    animation: pulse 2s infinite;
+  }
+
+  .item-card.found {
+    animation: none;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>🏴‍☠️ Найди предметы</h1>
+  <div class="header-controls">
+    <div class="score-display">
+      <span id="foundCount">0</span> / 15
+    </div>
+    <button class="music-btn" id="musicBtn" title="Музыка вкл/выкл">🔊</button>
+  </div>
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="progress-bar">
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+</div>
+
+<!-- SCENE -->
+<div class="scene-container">
+  <div class="scene-wrapper" id="sceneWrapper">
+    <img
+      class="scene-image"
+      src="pirate_scene.png"
+      alt="Пиратская сцена — найди предметы"
+      id="sceneImage"
+    >
+    <!-- Hotspots will be injected by JS -->
+  </div>
+</div>
+
+<!-- CHECKMARK OVERLAY -->
+<div class="checkmark-overlay" id="checkmarkOverlay">
+  <svg class="checkmark-svg" viewBox="0 0 100 100">
+    <circle class="checkmark-circle" cx="50" cy="50" r="45"/>
+    <path class="checkmark-check" d="M30 52 L44 66 L72 36"/>
+  </svg>
+</div>
+
+<!-- ITEMS GRID -->
+<div class="items-section">
+  <div class="items-title">Найди все предметы на картинке</div>
+  <div class="items-grid" id="itemsGrid">
+    <!-- Items injected by JS -->
+  </div>
+</div>
+
+<!-- WIN MODAL -->
+<div class="win-modal" id="winModal">
+  <div class="win-content">
+    <div class="emoji">🎉🏴‍☠️🎉</div>
+    <h2>Победа!</h2>
+    <p>Ты нашёл все 15 пиратских сокровищ!</p>
+    <button class="restart-btn" id="restartBtn">Играть снова</button>
+  </div>
+</div>
+
+<!-- AUDIO -->
+<audio id="bgMusic" loop preload="auto">
+  <source src="pirate_music.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+(function() {
+  'use strict';
+
+  // ===== DATA =====
+  const ITEMS = [
+    { id: 'pirate_hat',      name: 'Шляпа',       file: 'pirate_hat.png',       hx: 42, hy: 12, hr: 12 },
+    { id: 'treasure_chest',  name: 'Сундук',      file: 'treasure_chest.png',   hx: 45, hy: 62, hr: 14 },
+    { id: 'sword',           name: 'Сабля',       file: 'sword.png',            hx: 15, hy: 55, hr: 10 },
+    { id: 'treasure_map',    name: 'Карта',       file: 'treasure_map.png',     hx: 48, hy: 88, hr: 10 },
+    { id: 'gold_coin',       name: 'Монета',      file: 'gold_coin.png',        hx: 30, hy: 92, hr: 6  },
+    { id: 'eye_patch',       name: 'Повязка',     file: 'eye_patch.png',        hx: 55, hy: 30, hr: 8  },
+    { id: 'telescope',       name: 'Труба',       file: 'telescope.png',        hx: 72, hy: 28, hr: 9  },
+    { id: 'bandana',         name: 'Бандана',     file: 'bandana.png',          hx: 22, hy: 82, hr: 11 },
+    { id: 'anchor',          name: 'Якорь',       file: 'anchor.png',           hx: 78, hy: 72, hr: 11 },
+    { id: 'parrot',          name: 'Попугай',     file: 'parrot.png',           hx: 18, hy: 28, hr: 10 },
+    { id: 'message_bottle',  name: 'Бутылка',     file: 'message_bottle.png',   hx: 72, hy: 42, hr: 8  },
+    { id: 'ship_wheel',      name: 'Штурвал',     file: 'ship_wheel.png',       hx: 82, hy: 52, hr: 12 },
+    { id: 'barrel',          name: 'Бочка',       file: 'barrel.png',           hx: 18, hy: 48, hr: 11 },
+    { id: 'seashell',        name: 'Ракушка',     file: 'seashell.png',         hx: 88, hy: 92, hr: 7  },
+    { id: 'crab',            name: 'Краб',        file: 'crab.png',             hx: 75, hy: 88, hr: 9  }
+  ];
+
+  const TOTAL = ITEMS.length;
+  let foundSet = new Set();
+  let musicPlaying = false;
+
+  // ===== DOM =====
+  const sceneWrapper  = document.getElementById('sceneWrapper');
+  const itemsGrid     = document.getElementById('itemsGrid');
+  const foundCountEl  = document.getElementById('foundCount');
+  const progressFill  = document.getElementById('progressFill');
+  const checkmarkEl   = document.getElementById('checkmarkOverlay');
+  const winModal      = document.getElementById('winModal');
+  const restartBtn    = document.getElementById('restartBtn');
+  const musicBtn      = document.getElementById('musicBtn');
+  const bgMusic       = document.getElementById('bgMusic');
+
+  // ===== BUILD ITEMS GRID =====
+  function buildItemsGrid() {
+    itemsGrid.innerHTML = '';
+    ITEMS.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      card.dataset.id = item.id;
+      card.innerHTML = `
+        <img src="${item.file}" alt="${item.name}" loading="lazy">
+        <div class="item-name">${item.name}</div>
+      `;
+      itemsGrid.appendChild(card);
+    });
+  }
+
+  // ===== BUILD HOTSPOTS =====
+  function buildHotspots() {
+    // Remove old hotspots
+    sceneWrapper.querySelectorAll('.hotspot').forEach(h => h.remove());
+
+    ITEMS.forEach(item => {
+      const hotspot = document.createElement('div');
+      hotspot.className = 'hotspot';
+      hotspot.dataset.id = item.id;
+      hotspot.style.left   = `calc(${item.hx}% - ${item.hr}%)`;
+      hotspot.style.top    = `calc(${item.hy}% - ${item.hr}%)`;
+      hotspot.style.width  = `${item.hr * 2}%`;
+      hotspot.style.height = `${item.hr * 2}%`;
+
+      hotspot.addEventListener('click', () => handleHotspotClick(item.id, hotspot));
+      sceneWrapper.appendChild(hotspot);
+    });
+  }
+
+  // ===== HANDLE CLICK =====
+  function handleHotspotClick(id, hotspotEl) {
+    if (foundSet.has(id)) return;
+
+    foundSet.add(id);
+    hotspotEl.classList.add('found');
+
+    // Mark card
+    const card = itemsGrid.querySelector(`.item-card[data-id="${id}"]`);
+    if (card) card.classList.add('found');
+
+    // Update score
+    foundCountEl.textContent = foundSet.size;
+    progressFill.style.width = `${(foundSet.size / TOTAL) * 100}%`;
+
+    // Show checkmark
+    showCheckmark();
+
+    // Check win
+    if (foundSet.size === TOTAL) {
+      setTimeout(() => {
+        winModal.classList.add('show');
+      }, 1000);
+    }
+  }
+
+  // ===== CHECKMARK ANIMATION =====
+  function showCheckmark() {
+    checkmarkEl.classList.remove('show');
+    // Force reflow
+    void checkmarkEl.offsetWidth;
+    checkmarkEl.classList.add('show');
+
+    setTimeout(() => {
+      checkmarkEl.classList.remove('show');
+    }, 900);
+  }
+
+  // ===== WRONG CLICK ON SCENE =====
+  sceneWrapper.addEventListener('click', (e) => {
+    if (e.target.classList.contains('hotspot')) return;
+    // Clicked outside any hotspot — shake
+    sceneWrapper.classList.add('shake');
+    setTimeout(() => sceneWrapper.classList.remove('shake'), 400);
+  });
+
+  // ===== MUSIC TOGGLE =====
+  musicBtn.addEventListener('click', () => {
+    if (musicPlaying) {
+      bgMusic.pause();
+      musicBtn.textContent = '🔇';
+      musicBtn.classList.add('muted');
+    } else {
+      bgMusic.play().catch(() => {});
+      musicBtn.textContent = '🔊';
+      musicBtn.classList.remove('muted');
+    }
+    musicPlaying = !musicPlaying;
+  });
+
+  // ===== RESTART =====
+  restartBtn.addEventListener('click', () => {
+    foundSet.clear();
+    foundCountEl.textContent = '0';
+    progressFill.style.width = '0%';
+    winModal.classList.remove('show');
+
+    itemsGrid.querySelectorAll('.item-card').forEach(c => c.classList.remove('found'));
+    sceneWrapper.querySelectorAll('.hotspot').forEach(h => h.classList.remove('found'));
+  });
+
+  // ===== INIT =====
+  buildItemsGrid();
+  buildHotspots();
+
+})();
+</script>
+</body>
+</html>
